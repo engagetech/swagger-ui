@@ -139,12 +139,6 @@ export default class ParameterRow extends Component {
 
       if(isOAS3 && isOAS3() && !paramExamples){
         paramExample = param.get("example")
-
-        if(paramExample) {
-          paramExample = <HighlightCode value={ formatParamValue(paramExample, parameter) }/>
-        } else {
-          paramExample = <HighlightCode value={ formatParamValue(value, parameter) }/>
-        }
       }
     }
 
