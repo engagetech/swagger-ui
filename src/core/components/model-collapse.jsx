@@ -8,7 +8,7 @@ export default class ModelCollapse extends Component {
     children: PropTypes.any,
     title: PropTypes.element,
     modelName: PropTypes.string,
-    onToggle: PropTypes.func.isRequired
+    onToggle: PropTypes.func
   }
 
   static defaultProps = {
