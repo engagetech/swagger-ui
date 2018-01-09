@@ -3,6 +3,8 @@ import { Map } from "immutable"
 import PropTypes from "prop-types"
 import ImPropTypes from "react-immutable-proptypes"
 import win from "core/window"
+import HighlightCode from "./highlight-code"
+import { formatParamValue } from "core/plugins/oas3/utils"
 import { getExtensions } from "core/utils"
 
 export default class ParameterRow extends Component {
@@ -36,6 +38,7 @@ export default class ParameterRow extends Component {
     let { isOAS3 } = specSelectors
 
     let example = param.get("example")
+    let examples = param.get("examples")
     let defaultValue = param.get("default")
     let parameter = specSelectors.getParameter(pathMethod, param.get("name"), param.get("in"))
     let enumValue
@@ -54,6 +57,8 @@ export default class ParameterRow extends Component {
       value = paramValue
     } else if ( example !== undefined ) {
       value = example
+    } else if ( examples !== undefined && examples.size > 0 ) {
+      value = examples.first().value
     } else if ( defaultValue !== undefined) {
       value = defaultValue
     } else if ( param.get("required") && enumValue && enumValue.size ) {
@@ -127,9 +132,20 @@ export default class ParameterRow extends Component {
     // Default and Example Value for readonly doc
     let paramDefaultValue // undefined
     let paramExample // undefined
+    let paramExamples // undefined
     if ( param !== undefined ) {
       paramDefaultValue = param.get("default")
-      paramExample = param.get("example")
+      paramExamples = isOAS3 && isOAS3() && param.get("examples")
+
+      if(isOAS3 && isOAS3() && !paramExamples){
+        paramExample = param.get("example")
+
+        if(paramExample) {
+          paramExample = <HighlightCode value={ formatParamValue(paramExample, parameter) }/>
+        } else {
+          paramExample = <HighlightCode value={ formatParamValue(value, parameter) }/>
+        }
+      }
     }
 
     if (isDisplayParamItemsEnum) { // if we have an array, default value is in "items"
@@ -158,7 +174,7 @@ export default class ParameterRow extends Component {
             <Markdown source={
                 "<i>Available values</i> : " + paramItemsEnum.map(function(item) {
                     return item
-                  }).toArray()}/> 
+                  }).toArray()}/>
             : null
           }
 
@@ -177,7 +193,7 @@ export default class ParameterRow extends Component {
           { bodyParam || !isExecute ? null
             : <JsonSchemaForm fn={fn}
                               getComponent={getComponent}
-                              value={ value }
+                              value={ formatParamValue(value, parameter) }
                               required={ required }
                               description={param.get("description") ? `${param.get("name")} - ${param.get("description")}` : `${param.get("name")}`}
                               onChange={ this.onChangeWrapper }
@@ -192,9 +208,23 @@ export default class ParameterRow extends Component {
                                                 isExecute={ isExecute }
                                                 specSelectors={ specSelectors }
                                                 schema={ schema }
-                                                example={ bodyParam }/>
+                                                example={ bodyParam }
+                                                examples={ paramExamples }/>
               : null
           }
+
+          {/* for non-body params with example(s) */}
+          {
+            (!bodyParam && paramExamples) && <ModelExample
+            getComponent={ getComponent }
+            example={ example }
+            examples={ paramExamples }
+            getConfigs={ getConfigs }
+            isExecute={ isExecute }
+            specSelectors={ specSelectors }
+            schema={ schema } />
+          }
+
 
         </td>
 
